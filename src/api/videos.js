@@ -1,4 +1,4 @@
-import { apiClient, DEMO_MODE } from "./client.js";
+import { apiClient, DEMO_MODE, resolveVideoUrl } from "./client.js";
 import { createMockHistory } from "../demo/mockData.js";
 import { normalizeResult } from "../utils/normalizeResult.js";
 
@@ -7,11 +7,12 @@ import { normalizeResult } from "../utils/normalizeResult.js";
  * (vedi db.py / GET /videos in ailights-agent/app.py).
  *
  *   GET {VITE_API_BASE_URL}/videos
- *   risposta: [{ id, title, created_at, result: RawHighlight[] }, ...]
+ *   risposta: [{ id, title, created_at, result: RawHighlight[], video_url }, ...]
  *
  * Ogni record viene normalizzato in un AnalysisResult (vedi
- * src/utils/normalizeResult.js), riusando id/titolo già calcolati dal
- * backend invece di ricalcolarli.
+ * src/utils/normalizeResult.js), riusando id/titolo/video_url già
+ * calcolati dal backend invece di ricalcolarli — il video resta quindi
+ * riproducibile anche dopo un refresh, non solo per la sessione corrente.
  *
  * @returns {Promise<import('../types.js').AnalysisResult[]>}
  */
@@ -26,6 +27,7 @@ export async function fetchVideoHistory() {
       id: record.id,
       title: record.title,
       createdAt: record.created_at,
+      videoUrl: resolveVideoUrl(record.video_url),
     })
   );
 }

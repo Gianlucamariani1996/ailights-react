@@ -1,4 +1,4 @@
-import { apiClient, DEMO_MODE } from "./client.js";
+import { apiClient, DEMO_MODE, resolveVideoUrl } from "./client.js";
 import { MOCK_HIGHLIGHTS } from "../demo/mockData.js";
 import { normalizeResult } from "../utils/normalizeResult.js";
 
@@ -10,11 +10,13 @@ import { normalizeResult } from "../utils/normalizeResult.js";
  *
  *   POST {VITE_API_BASE_URL}/analyze-video
  *   multipart/form-data, campo "video" con il file
- *   risposta 200: { result: RawHighlight[], video_id: string, title: string }
+ *   risposta 200: { result: RawHighlight[], video_id: string, title: string, video_url: string }
  *   risposta 4xx/5xx: { error: string }
  *
  * Il backend salva anche l'analisi in un DB persistente (id + titolo +
- * JSON), da cui GET /videos alimenta lo storico (vedi src/api/videos.js).
+ * JSON + riferimento al video), da cui GET /videos alimenta lo storico
+ * (vedi src/api/videos.js) — il video resta quindi disponibile anche dopo
+ * un refresh, non solo per la sessione corrente.
  *
  * Il risultato grezzo viene normalizzato in un AnalysisResult (vedi
  * src/utils/normalizeResult.js) prima di essere restituito al chiamante.
@@ -24,8 +26,6 @@ import { normalizeResult } from "../utils/normalizeResult.js";
  * @returns {Promise<import('../types.js').AnalysisResult>}
  */
 export async function analyzeVideo(file, { onProgress } = {}) {
-  const videoUrl = file ? URL.createObjectURL(file) : null;
-
   if (DEMO_MODE) {
     for (let p = 0; p <= 90; p += 15) {
       onProgress?.(p);
@@ -33,7 +33,9 @@ export async function analyzeVideo(file, { onProgress } = {}) {
     }
     await wait(400);
     onProgress?.(100);
-    return normalizeResult(MOCK_HIGHLIGHTS, { videoUrl });
+    // In demo mode non c'è un backend che persista il file: usiamo un
+    // object URL locale, valido solo per questa sessione del browser.
+    return normalizeResult(MOCK_HIGHLIGHTS, { videoUrl: file ? URL.createObjectURL(file) : null });
   }
 
   const formData = new FormData();
@@ -48,7 +50,11 @@ export async function analyzeVideo(file, { onProgress } = {}) {
   });
 
   if (data.error) throw new Error(data.error);
-  return normalizeResult(data.result, { videoUrl, id: data.video_id, title: data.title });
+  return normalizeResult(data.result, {
+    videoUrl: resolveVideoUrl(data.video_url),
+    id: data.video_id,
+    title: data.title,
+  });
 }
 
 function wait(ms) {

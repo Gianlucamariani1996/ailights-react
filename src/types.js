@@ -44,7 +44,7 @@
  * @property {string} title - es. "Juventus vs Milan" (derivato client-side dalle squadre viste negli highlight)
  * @property {string} competition - non fornita dal backend: al momento sempre ""
  * @property {"calcio"} sport - il backend analizza solo calcio; il campo resta per compatibilità con la UI (sportbadge, StoricoScreen)
- * @property {string|null} videoUrl - object URL locale del file caricato (il backend non persiste il video)
+ * @property {string|null} videoUrl - URL del video servito dal backend (/uploads/... o l'URL remoto originale), risolto via resolveVideoUrl()
  * @property {number} duration - stima (max endTime degli highlight), poi corretta con la durata reale del <video>
  * @property {string} createdAt - data ISO di caricamento/analisi
  * @property {AnalysisStats} stats
