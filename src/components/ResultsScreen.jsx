@@ -95,10 +95,6 @@ export default function ResultsScreen({ result }) {
             <span className="k">Durata totale clip</span>
             <span className="v">{formatTime(result.stats.totalClipDuration)}</span>
           </div>
-          <div className="stat-line">
-            <span className="k">Relevance media</span>
-            <span className="v">{result.stats.avgRelevance.toFixed(0)} / 100</span>
-          </div>
           <button className="cta" onClick={handleGenerateReel} disabled={reelState.status === "loading"}>
             {reelState.status === "loading" ? (
               <>
