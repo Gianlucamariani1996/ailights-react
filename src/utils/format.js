@@ -9,6 +9,14 @@ export function formatTime(totalSeconds) {
   return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
+/** Converte "mm:ss" o "hh:mm:ss" (come li restituisce il backend) in secondi. */
+export function parseTimeToSeconds(value) {
+  if (typeof value !== "string") return 0;
+  const parts = value.split(":").map(Number);
+  if (parts.length === 0 || parts.some(Number.isNaN)) return 0;
+  return parts.reduce((acc, p) => acc * 60 + p, 0);
+}
+
 export function formatDate(iso) {
   if (!iso) return "";
   try {

@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
-import { IconPlay } from "./icons.jsx";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { IconPlay, IconPause } from "./icons.jsx";
 import { getHighlightType } from "../config/highlightTypes.js";
 import { formatTime } from "../utils/format.js";
 
-export default function VideoPlayer({ result, onSelectHighlight }) {
+const VideoPlayer = forwardRef(function VideoPlayer({ result, onSelectHighlight }, ref) {
+  const containerRef = useRef(null);
   const videoRef = useRef(null);
   const trackRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -29,6 +30,19 @@ export default function VideoPlayer({ result, onSelectHighlight }) {
     setCurrentTime(seconds);
   }
 
+  // Usato dal bottone "Guarda clip" nella lista highlight: porta il player
+  // sul punto giusto della timeline e avvia la riproduzione.
+  useImperativeHandle(ref, () => ({
+    playFrom(seconds) {
+      seekTo(seconds);
+      videoRef.current?.play();
+      setIsPlaying(true);
+    },
+    scrollIntoView(opts) {
+      containerRef.current?.scrollIntoView(opts);
+    },
+  }));
+
   function handleTrackClick(e) {
     if (!trackRef.current || !duration) return;
     const rect = trackRef.current.getBoundingClientRect();
@@ -39,11 +53,12 @@ export default function VideoPlayer({ result, onSelectHighlight }) {
   const fillPct = duration ? Math.min(100, (currentTime / duration) * 100) : 0;
 
   return (
-    <div className="player">
+    <div className="player" ref={containerRef}>
       <video
         ref={videoRef}
         src={result.videoUrl}
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", cursor: "pointer" }}
+        onClick={togglePlay}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => {
           // se il video reale espone una durata, la preferiamo a quella del backend
@@ -56,11 +71,13 @@ export default function VideoPlayer({ result, onSelectHighlight }) {
         onEnded={() => setIsPlaying(false)}
       />
 
-      {!isPlaying && (
-        <button className="playbtn" onClick={togglePlay} aria-label="Play">
-          <IconPlay />
-        </button>
-      )}
+      <button
+        className={"playbtn" + (isPlaying ? " is-playing" : "")}
+        onClick={togglePlay}
+        aria-label={isPlaying ? "Pausa" : "Play"}
+      >
+        {isPlaying ? <IconPause style={{ marginLeft: 0 }} /> : <IconPlay />}
+      </button>
 
       <div className="barbottom">
         <span className="time">
@@ -96,4 +113,6 @@ export default function VideoPlayer({ result, onSelectHighlight }) {
       </div>
     </div>
   );
-}
+});
+
+export default VideoPlayer;

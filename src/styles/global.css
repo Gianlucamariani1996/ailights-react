@@ -133,8 +133,11 @@
     width:64px;height:64px;border-radius:50%;
     background:rgba(255,255,255,0.14);border:1px solid var(--border-strong);
     display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);
+    cursor:pointer;transition:opacity .15s ease;
   }
   .player .playbtn svg{width:22px;height:22px;color:#fff;margin-left:2px;}
+  .player .playbtn.is-playing{opacity:0;}
+  .player:hover .playbtn.is-playing{opacity:1;}
   .player .barbottom{
     position:absolute;left:16px;right:16px;bottom:14px;
     display:flex;align-items:center;gap:10px;

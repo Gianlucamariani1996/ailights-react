@@ -4,19 +4,17 @@ import {
   IconHandStop,
   IconCards,
   IconCircleLetterP,
+  IconGoalPost,
 } from "../components/icons.jsx";
 
 /**
  * Fonte unica di verità per le tipologie di highlight.
  *
- * ⚠️ CONTRATTO DA CONFERMARE COL BACKEND:
- * ci aspettiamo che ogni highlight nel JSON di risposta abbia un campo
- * `type` con uno di questi valori esatti (stringa). Se il backend usa
- * nomi diversi, basta aggiornare le chiavi di questo oggetto.
- *
- * `teamLabel(team)` decide come mostrare la squadra sulla card: per la
- * maggior parte dei tipi è semplicemente il nome della squadra, ma per
- * alcuni (es. rigore) ha senso una frase più contestuale.
+ * Le chiavi corrispondono esattamente al campo `type` restituito dal
+ * backend (vedi SYSTEM_PROMPT in ailights-agent/service.py). `teamLabel(team)`
+ * decide come mostrare la squadra sulla card: per la maggior parte dei tipi
+ * è semplicemente il nome della squadra, ma per alcuni (es. rigore) ha
+ * senso una frase più contestuale.
  */
 export const HIGHLIGHT_TYPES = {
   gol: {
@@ -35,7 +33,7 @@ export const HIGHLIGHT_TYPES = {
     Icon: IconCircleLetterP,
     teamLabel: (team) => `Rigore per il ${team}`,
   },
-  occasione: {
+  "occasione da gol": {
     label: "Occasioni",
     color: "var(--gold)",
     soft: "var(--gold-soft)",
@@ -51,6 +49,14 @@ export const HIGHLIGHT_TYPES = {
     Icon: IconHandStop,
     teamLabel: (team) => team,
   },
+  palo: {
+    label: "Pali",
+    color: "var(--gold)",
+    soft: "var(--gold-soft)",
+    hex: "#ffc857",
+    Icon: IconGoalPost,
+    teamLabel: (team) => team,
+  },
   cartellino: {
     label: "Cartellini",
     color: "var(--red)",
@@ -62,7 +68,14 @@ export const HIGHLIGHT_TYPES = {
 };
 
 // Ordine di visualizzazione dei chip filtro (oltre a "Tutti")
-export const HIGHLIGHT_TYPE_ORDER = ["gol", "rigore", "occasione", "parata", "cartellino"];
+export const HIGHLIGHT_TYPE_ORDER = [
+  "gol",
+  "rigore",
+  "occasione da gol",
+  "parata",
+  "palo",
+  "cartellino",
+];
 
 export function getHighlightType(type) {
   return (

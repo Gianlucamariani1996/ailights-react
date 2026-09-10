@@ -1,98 +1,100 @@
 // Dati di comodo per sviluppare/mostrare il frontend senza un backend reale.
 // Si attivano impostando VITE_DEMO_MODE=true in .env (vedi .env.example).
-// Il JSON qui sotto rispetta esattamente il contratto ipotizzato in src/types.js.
+//
+// Stessa shape "piatta" restituita dal backend reale — vedi anche il mock
+// lato Flask attivabile con MOCK_ANALYSIS=1 in ailights-agent/.env, che usa
+// esattamente questi stessi dati. src/utils/normalizeResult.js li trasforma
+// entrambi nella shape AnalysisResult che la UI si aspetta.
+import { normalizeResult } from "../utils/normalizeResult.js";
 
-/** @returns {import('../types.js').AnalysisResult} */
-export function createMockResult({ fileName = "video.mp4", videoUrl } = {}) {
-  return {
-    id: "demo-" + Date.now(),
-    title: "Milan vs Inter",
-    competition: "Serie A, giornata 5",
-    sport: "calcio",
-    videoUrl: videoUrl || "https://example-bucket.s3.amazonaws.com/" + fileName,
-    duration: 2090, // 34:50
-    createdAt: new Date().toISOString(),
-    stats: { highlightsFound: 8, totalClipDuration: 252, avgRelevance: 8.4 },
-    highlights: [
-      {
-        id: "h1",
-        type: "gol",
-        team: "Milan",
-        startTime: 724, // 12:04
-        endTime: 758,
-        relevanceScore: 9.4,
-        description:
-          "Azione sull'out di destra, cross basso e conclusione al volo sotto la traversa. Esultanza intensa del pubblico rilevata dall'audio.",
-      },
-      {
-        id: "h2",
-        type: "parata",
-        team: "Inter",
-        startTime: 1752, // 29:12
-        endTime: 1774,
-        relevanceScore: 8.1,
-        description:
-          "Riflesso su tiro ravvicinato in seguito a corner. Scoreboard OCR confirma situazione di parità al momento dell'azione.",
-      },
-      {
-        id: "h3",
-        type: "cartellino",
-        team: "Milan",
-        startTime: 2690, // 44:50
-        endTime: 2705,
-        relevanceScore: 8.0,
-        description:
-          "Entrata a due piedi a centrocampo, intervento considerato pericoloso: l'arbitro estrae il rosso diretto dopo revisione al VAR.",
-      },
-      {
-        id: "h4",
-        type: "rigore",
-        team: "Milan",
-        startTime: 3400, // 56:40
-        endTime: 3432,
-        relevanceScore: 9.1,
-        description:
-          "Fallo da rigore in area dopo un cross dalla destra: l'attaccante viene atterrato, l'arbitro assegna il penalty dopo revisione al VAR.",
-      },
-      {
-        id: "h5",
-        type: "gol",
-        team: "Inter",
-        startTime: 3800, // 63:20
-        endTime: 3838,
-        relevanceScore: 9.8,
-        description:
-          "Contropiede fulmineo dopo recupero palla a metà campo. Reazione del pubblico tra le più intense dell'intero match.",
-      },
-    ],
-  };
-}
+/** @type {import('../types.js').RawHighlight[]} */
+export const MOCK_HIGHLIGHTS = [
+  {
+    type: "occasione da gol",
+    start: "08:12",
+    end: "08:24",
+    team: "Juventus",
+    description:
+      "Contropiede rapido della Juventus: Vlahovic allarga per Cuadrado che calcia di potenza incrociando a fil di palo.",
+    relevance: 72,
+  },
+  {
+    type: "parata",
+    start: "11:52",
+    end: "12:06",
+    team: "Juventus",
+    description:
+      "Azione corale della Juventus, velo di Vlahovic e conclusione mancina di prima intenzione di Milik, respinta da Tatarusanu.",
+    relevance: 75,
+  },
+  {
+    type: "occasione da gol",
+    start: "12:54",
+    end: "13:06",
+    team: "Juventus",
+    description:
+      "Danilo approfitta dello spazio al limite dell'area e scaglia un violento diagonale destro che finisce di poco a lato.",
+    relevance: 70,
+  },
+  {
+    type: "palo",
+    start: "20:03",
+    end: "20:25",
+    team: "Milan",
+    description:
+      "Sugli sviluppi di un calcio d'angolo di Tonali, colpo di tacco di Rafael Leão che si stampa direttamente sul palo a Szczesny battuto.",
+    relevance: 88,
+  },
+  {
+    type: "palo",
+    start: "33:55",
+    end: "34:15",
+    team: "Milan",
+    description:
+      "Rafael Leão si accentra dalla sinistra e scocca una splendida conclusione da fuori area che colpisce in pieno la base del palo.",
+    relevance: 89,
+  },
+  {
+    type: "gol",
+    start: "45:33",
+    end: "46:10",
+    team: "Milan",
+    description:
+      "Calcio d'angolo teso battuto da Theo Hernandez, conclusione al volo di Giroud controllata e girata in rete da distanza ravvicinata da Fikayo Tomori per l'1-0.",
+    relevance: 95,
+  },
+];
 
 /** @returns {import('../types.js').AnalysisResult[]} */
 export function createMockHistory() {
-  const milanInter = createMockResult({});
-  milanInter.id = "demo-milan-inter";
-  milanInter.createdAt = new Date(Date.now() - 3 * 86400000).toISOString();
+  const juveMilan = normalizeResultForDemo(MOCK_HIGHLIGHTS, {
+    id: "demo-juventus-milan",
+    createdAtOffsetDays: 3,
+  });
 
   const sinnerAlcaraz = {
-    ...milanInter,
+    ...juveMilan,
     id: "demo-sinner-alcaraz",
     title: "Sinner vs Alcaraz",
     competition: "ATP Finals, semifinale",
     sport: "tennis",
     createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-    stats: { highlightsFound: 6, totalClipDuration: 190, avgRelevance: 8.6 },
   };
 
   const napoliJuve = {
-    ...milanInter,
+    ...juveMilan,
     id: "demo-napoli-juve",
     title: "Napoli vs Juventus",
     competition: "Serie A, giornata 4",
-    sport: "calcio",
     createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
-    stats: { highlightsFound: 5, totalClipDuration: 168, avgRelevance: 7.9 },
   };
 
-  return [milanInter, sinnerAlcaraz, napoliJuve];
+  return [juveMilan, sinnerAlcaraz, napoliJuve];
+}
+
+function normalizeResultForDemo(rawHighlights, { id, createdAtOffsetDays }) {
+  const result = normalizeResult(rawHighlights);
+  result.id = id;
+  result.createdAt = new Date(Date.now() - createdAtOffsetDays * 86400000).toISOString();
+  return result;
 }

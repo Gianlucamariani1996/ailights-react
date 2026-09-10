@@ -1,41 +1,51 @@
 /**
  * Questo file non esporta nulla a runtime: serve solo a documentare
- * (via JSDoc) il contratto JSON che ci aspettiamo dal backend, così
- * l'editor dà autocompletamento anche in JavaScript puro.
+ * (via JSDoc) le shape usate dal frontend, così l'editor dà
+ * autocompletamento anche in JavaScript puro.
  *
- * ⚠️ TUTTO QUESTO FILE È UN'IPOTESI DA CONFERMARE COL BACKEND.
- * Se i nomi dei campi cambiano, basta aggiornare qui + i due file in
- * src/config/ (highlightTypes.js e sports.js) che derivano icone/colori
- * da questi valori.
+ * Il backend (`POST /analyze-video`, vedi ailights-agent/service.py)
+ * restituisce un array "piatto" di RawHighlight, senza metadati sulla
+ * partita: `src/utils/normalizeResult.js` lo trasforma in un AnalysisResult
+ * completo, che è la shape che i componenti (ResultsScreen, VideoPlayer,
+ * StoricoScreen...) si aspettano.
+ */
+
+/**
+ * @typedef {Object} RawHighlight
+ * @property {string} type - es. "gol", "rigore", "occasione da gol", "parata", "palo", "cartellino"
+ * @property {string} start - "mm:ss" o "hh:mm:ss"
+ * @property {string} end - "mm:ss" o "hh:mm:ss"
+ * @property {string|null} team
+ * @property {string} description
+ * @property {number} relevance - 0-100, quanto vale editorialmente il momento
  */
 
 /**
  * @typedef {Object} Highlight
  * @property {string} id
- * @property {"gol"|"rigore"|"occasione"|"parata"|"cartellino"} type
+ * @property {string} type
  * @property {string|null} team - nome della squadra (o null se non applicabile)
  * @property {number} startTime - secondi dall'inizio del video
  * @property {number} endTime - secondi dall'inizio del video
- * @property {number} relevanceScore - punteggio di rilevanza, 0-10
+ * @property {number} relevance - 0-100
  * @property {string} description - breve descrizione generata dall'agente
- * @property {string} [clipUrl] - url della clip estratta (se già disponibile)
  */
 
 /**
  * @typedef {Object} AnalysisStats
  * @property {number} highlightsFound
  * @property {number} totalClipDuration - secondi
- * @property {number} avgRelevance - 0-10
+ * @property {number} avgRelevance - 0-100
  */
 
 /**
  * @typedef {Object} AnalysisResult
  * @property {string} id
- * @property {string} title - es. "Milan vs Inter"
- * @property {string} competition - es. "Serie A, giornata 5"
- * @property {"calcio"|"tennis"} sport
- * @property {string} videoUrl - url pubblico (S3) del video sorgente
- * @property {number} duration - durata totale video, in secondi
+ * @property {string} title - es. "Juventus vs Milan" (derivato client-side dalle squadre viste negli highlight)
+ * @property {string} competition - non fornita dal backend: al momento sempre ""
+ * @property {"calcio"} sport - il backend analizza solo calcio; il campo resta per compatibilità con la UI (sportbadge, StoricoScreen)
+ * @property {string|null} videoUrl - object URL locale del file caricato (il backend non persiste il video)
+ * @property {number} duration - stima (max endTime degli highlight), poi corretta con la durata reale del <video>
  * @property {string} createdAt - data ISO di caricamento/analisi
  * @property {AnalysisStats} stats
  * @property {Highlight[]} highlights

@@ -6,22 +6,21 @@ import {
   IconBallFootball,
   IconClapperboard,
 } from "./icons.jsx";
-import { getPresignedUrl, uploadFileToS3 } from "../api/uploads.js";
 import { analyzeVideo } from "../api/analyze.js";
 
-// Stati possibili del flusso di caricamento
+// Stati possibili del flusso di caricamento.
+// Niente più fase di "upload separato": il backend fa upload + analisi
+// in un'unica chiamata sincrona (vedi src/api/analyze.js), quindi qui ci
+// limitiamo a mettere in staging il file scelto e a lanciare l'analisi.
 const STATUS = {
   IDLE: "idle",
-  UPLOADING: "uploading",
-  UPLOADED: "uploaded",
+  READY: "ready",
   ANALYZING: "analyzing",
-  ERROR_UPLOAD: "error_upload",
   ERROR_ANALYZE: "error_analyze",
 };
 
 export default function UploadScreen({ onAnalysisComplete }) {
   const [file, setFile] = useState(null);
-  const [fileUrl, setFileUrl] = useState(null);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState(STATUS.IDLE);
   const [errorMsg, setErrorMsg] = useState("");
@@ -30,36 +29,24 @@ export default function UploadScreen({ onAnalysisComplete }) {
 
   function reset() {
     setFile(null);
-    setFileUrl(null);
     setProgress(0);
     setStatus(STATUS.IDLE);
     setErrorMsg("");
   }
 
-  async function startUpload(selectedFile) {
+  function selectFile(selectedFile) {
     setFile(selectedFile);
-    setStatus(STATUS.UPLOADING);
     setProgress(0);
     setErrorMsg("");
-    try {
-      const { uploadUrl, fileUrl: finalUrl } = await getPresignedUrl(selectedFile);
-      await uploadFileToS3(selectedFile, uploadUrl, setProgress);
-      setFileUrl(finalUrl);
-      setStatus(STATUS.UPLOADED);
-    } catch (err) {
-      console.error("Errore upload S3:", err);
-      setStatus(STATUS.ERROR_UPLOAD);
-      setErrorMsg(
-        "Non sono riuscito a caricare il video su S3. Controlla la connessione e riprova."
-      );
-    }
+    setStatus(STATUS.READY);
   }
 
   async function handleDiscoverClick() {
     setStatus(STATUS.ANALYZING);
     setErrorMsg("");
+    setProgress(0);
     try {
-      const result = await analyzeVideo(fileUrl);
+      const result = await analyzeVideo(file, { onProgress: setProgress });
       onAnalysisComplete(result);
       reset();
     } catch (err) {
@@ -73,17 +60,17 @@ export default function UploadScreen({ onAnalysisComplete }) {
 
   function handleFileInputChange(e) {
     const f = e.target.files?.[0];
-    if (f) startUpload(f);
+    if (f) selectFile(f);
   }
 
   function handleDrop(e) {
     e.preventDefault();
     setDragOver(false);
     const f = e.dataTransfer.files?.[0];
-    if (f) startUpload(f);
+    if (f) selectFile(f);
   }
 
-  const isBusy = status === STATUS.UPLOADING || status === STATUS.ANALYZING;
+  const isBusy = status === STATUS.ANALYZING;
 
   return (
     <section className="screen active">
@@ -146,10 +133,10 @@ export default function UploadScreen({ onAnalysisComplete }) {
               )}
             </div>
 
-            {status === STATUS.UPLOADING && (
+            {status === STATUS.ANALYZING && progress < 100 && (
               <div className="upload-progress">
                 <div className="row">
-                  <span>Caricamento su S3…</span>
+                  <span>Caricamento video…</span>
                   <span>{progress}%</span>
                 </div>
                 <div className="bar">
@@ -158,7 +145,7 @@ export default function UploadScreen({ onAnalysisComplete }) {
               </div>
             )}
 
-            {(status === STATUS.UPLOADED || status === STATUS.ANALYZING || status === STATUS.ERROR_ANALYZE) && (
+            {(status === STATUS.READY || status === STATUS.ANALYZING || status === STATUS.ERROR_ANALYZE) && (
               <>
                 <button
                   className="discover-btn"
@@ -177,7 +164,7 @@ export default function UploadScreen({ onAnalysisComplete }) {
                     </>
                   )}
                 </button>
-                {status === STATUS.ANALYZING && (
+                {status === STATUS.ANALYZING && progress >= 100 && (
                   <div className="state-note">
                     <IconClock style={{ width: 12, height: 12, verticalAlign: "-2px", marginRight: 4 }} />
                     L'agente sta analizzando il video, può richiedere qualche istante.
@@ -186,16 +173,10 @@ export default function UploadScreen({ onAnalysisComplete }) {
               </>
             )}
 
-            {(status === STATUS.ERROR_UPLOAD || status === STATUS.ERROR_ANALYZE) && (
+            {status === STATUS.ERROR_ANALYZE && (
               <div className="error-banner">
                 {errorMsg}
-                <button
-                  onClick={() =>
-                    status === STATUS.ERROR_UPLOAD ? startUpload(file) : handleDiscoverClick()
-                  }
-                >
-                  Riprova
-                </button>
+                <button onClick={handleDiscoverClick}>Riprova</button>
               </div>
             )}
           </>

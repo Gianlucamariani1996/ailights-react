@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import VideoPlayer from "./VideoPlayer.jsx";
 import { IconBolt, IconLayoutGrid, IconPlay, IconDownload, IconStar } from "./icons.jsx";
 import { HIGHLIGHT_TYPE_ORDER, getHighlightType } from "../config/highlightTypes.js";
@@ -7,6 +7,12 @@ import { formatTime, splitTeams } from "../utils/format.js";
 
 export default function ResultsScreen({ result }) {
   const [filter, setFilter] = useState("tutti");
+  const playerRef = useRef(null);
+
+  function handleWatchClip(h) {
+    playerRef.current?.playFrom(h.startTime);
+    playerRef.current?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+  }
 
   const [teamA, teamB] = useMemo(() => splitTeams(result.title), [result.title]);
   const teamClass = (team) => {
@@ -30,12 +36,13 @@ export default function ResultsScreen({ result }) {
     <section className="screen active">
       <div className="res-top">
         <div>
-          <VideoPlayer result={result} />
+          <VideoPlayer ref={playerRef} result={result} />
 
           <div className="video-meta">
             <div className="row1">
               <h2>
-                {result.title} — {result.competition}
+                {result.title}
+                {result.competition && ` — ${result.competition}`}
               </h2>
               <span className="sportbadge">
                 <sport.Icon style={{ width: 12, height: 12 }} />
@@ -66,7 +73,7 @@ export default function ResultsScreen({ result }) {
           </div>
           <div className="stat-line">
             <span className="k">Relevance media</span>
-            <span className="v">{result.stats.avgRelevance.toFixed(1)} / 10</span>
+            <span className="v">{result.stats.avgRelevance.toFixed(0)} / 100</span>
           </div>
           <button
             className="cta"
@@ -130,12 +137,12 @@ export default function ResultsScreen({ result }) {
                 </div>
                 <span className="score">
                   <IconStar />
-                  {h.relevanceScore.toFixed(1)}
+                  {h.relevance}
                 </span>
               </div>
               <p className="hl-desc">{h.description}</p>
               <div className="hl-actions">
-                <button className="primary">
+                <button className="primary" onClick={() => handleWatchClip(h)}>
                   <IconPlay style={{ width: 12, height: 12 }} />
                   Guarda clip
                 </button>

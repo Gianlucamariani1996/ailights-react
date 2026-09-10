@@ -123,6 +123,14 @@ export function IconPlay(props) {
   );
 }
 
+export function IconPause(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M7 5h3v14H7zm7 0h3v14h-3z" />
+    </svg>
+  );
+}
+
 export function IconClock(props) {
   return (
     <svg {...base} {...props}>
@@ -153,6 +161,15 @@ export function IconX(props) {
   return (
     <svg {...base} {...props}>
       <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  );
+}
+
+export function IconGoalPost(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 21V5a1 1 0 0 1 1 -1h14a1 1 0 0 1 1 1v16" />
+      <path d="M4 12h16" />
     </svg>
   );
 }
