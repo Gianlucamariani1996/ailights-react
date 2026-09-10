@@ -31,3 +31,22 @@ export async function fetchVideoHistory() {
     })
   );
 }
+
+/**
+ * Chiede al backend di assemblare l'highlight reel per un video già
+ * analizzato: ritaglia ogni highlight dal video sorgente e li concatena in
+ * un unico mp4 con ffmpeg (vedi reel.py / POST /videos/<id>/reel in
+ * ailights-agent/app.py). Se il reel esiste già, il backend lo riusa senza
+ * rigenerarlo.
+ *
+ * Non disponibile in demo mode: non c'è un video sorgente reale da cui
+ * ritagliare le clip.
+ *
+ * @param {string} videoId
+ * @returns {Promise<string>} url del reel generato
+ */
+export async function generateReel(videoId) {
+  const { data } = await apiClient.post(`/videos/${videoId}/reel`);
+  if (data.error) throw new Error(data.error);
+  return resolveVideoUrl(data.reel_url);
+}

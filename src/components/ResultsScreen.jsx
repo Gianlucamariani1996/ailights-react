@@ -4,14 +4,38 @@ import { IconBolt, IconLayoutGrid, IconPlay, IconDownload, IconStar } from "./ic
 import { HIGHLIGHT_TYPE_ORDER, getHighlightType } from "../config/highlightTypes.js";
 import { getSport } from "../config/sports.js";
 import { formatTime, splitTeams } from "../utils/format.js";
+import { DEMO_MODE } from "../api/client.js";
+import { generateReel } from "../api/videos.js";
 
 export default function ResultsScreen({ result }) {
   const [filter, setFilter] = useState("tutti");
+  const [reelState, setReelState] = useState({ status: "idle" });
   const playerRef = useRef(null);
 
   function handleWatchClip(h) {
     playerRef.current?.playFrom(h.startTime);
     playerRef.current?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+  }
+
+  async function handleGenerateReel() {
+    if (DEMO_MODE) {
+      setReelState({
+        status: "error",
+        message: "La generazione del reel richiede un backend reale: non disponibile in demo mode.",
+      });
+      return;
+    }
+    setReelState({ status: "loading" });
+    try {
+      const url = await generateReel(result.id);
+      setReelState({ status: "ready", url });
+    } catch (err) {
+      console.error("Errore generazione reel:", err);
+      setReelState({
+        status: "error",
+        message: err.message || "Generazione del reel non riuscita.",
+      });
+    }
   }
 
   const [teamA, teamB] = useMemo(() => splitTeams(result.title), [result.title]);
@@ -75,13 +99,44 @@ export default function ResultsScreen({ result }) {
             <span className="k">Relevance media</span>
             <span className="v">{result.stats.avgRelevance.toFixed(0)} / 100</span>
           </div>
-          <button
-            className="cta"
-            onClick={() => console.log("TODO: collegare endpoint generazione reel")}
-          >
-            <IconLayoutGrid style={{ width: 14, height: 14 }} />
-            Genera highlight reel
+          <button className="cta" onClick={handleGenerateReel} disabled={reelState.status === "loading"}>
+            {reelState.status === "loading" ? (
+              <>
+                <span className="spinner" />
+                Generazione in corso…
+              </>
+            ) : (
+              <>
+                <IconLayoutGrid style={{ width: 14, height: 14 }} />
+                Genera highlight reel
+              </>
+            )}
           </button>
+
+          {reelState.status === "error" && (
+            <div className="error-banner" style={{ margin: "12px 0 0", maxWidth: "none" }}>
+              {reelState.message}
+            </div>
+          )}
+
+          {reelState.status === "ready" && (
+            <div style={{ marginTop: 14 }}>
+              <video
+                src={reelState.url}
+                controls
+                style={{ width: "100%", borderRadius: 10, display: "block" }}
+              />
+              <a
+                className="cta"
+                href={reelState.url}
+                download
+                style={{ marginTop: 10, textDecoration: "none" }}
+              >
+                <IconDownload style={{ width: 14, height: 14 }} />
+                Scarica il reel
+              </a>
+            </div>
+          )}
         </div>
       </div>
 
