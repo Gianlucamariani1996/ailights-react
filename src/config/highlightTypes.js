@@ -2,7 +2,6 @@ import {
   IconBallFootball,
   IconTarget,
   IconHandStop,
-  IconCards,
   IconCircleLetterP,
   IconGoalPost,
 } from "../components/icons.jsx";
@@ -57,25 +56,10 @@ export const HIGHLIGHT_TYPES = {
     Icon: IconGoalPost,
     teamLabel: (team) => team,
   },
-  cartellino: {
-    label: "Cartellini",
-    color: "var(--red)",
-    soft: "var(--red-soft)",
-    hex: "#ff5d6c",
-    Icon: IconCards,
-    teamLabel: (team) => team,
-  },
 };
 
 // Ordine di visualizzazione dei chip filtro (oltre a "Tutti")
-export const HIGHLIGHT_TYPE_ORDER = [
-  "gol",
-  "rigore",
-  "occasione da gol",
-  "parata",
-  "palo",
-  "cartellino",
-];
+export const HIGHLIGHT_TYPE_ORDER = ["gol", "rigore", "occasione da gol", "parata", "palo"];
 
 export function getHighlightType(type) {
   return (

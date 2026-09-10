@@ -92,9 +92,9 @@ export default function ResultsScreen({ result }) {
         >
           Tutti <span className="chip-count">– {result.highlights.length}</span>
         </div>
-        {HIGHLIGHT_TYPE_ORDER.map((type) => {
+        {HIGHLIGHT_TYPE_ORDER.filter((type) => counts[type] > 0).map((type) => {
           const meta = getHighlightType(type);
-          const count = counts[type] || 0;
+          const count = counts[type];
           return (
             <div
               key={type}

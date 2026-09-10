@@ -12,7 +12,7 @@
 
 /**
  * @typedef {Object} RawHighlight
- * @property {string} type - es. "gol", "rigore", "occasione da gol", "parata", "palo", "cartellino"
+ * @property {string} type - "gol"|"rigore"|"palo"|"parata"|"occasione da gol"
  * @property {string} start - "mm:ss" o "hh:mm:ss"
  * @property {string} end - "mm:ss" o "hh:mm:ss"
  * @property {string|null} team
