@@ -10,8 +10,11 @@ import { normalizeResult } from "../utils/normalizeResult.js";
  *
  *   POST {VITE_API_BASE_URL}/analyze-video
  *   multipart/form-data, campo "video" con il file
- *   risposta 200: { result: RawHighlight[] }
+ *   risposta 200: { result: RawHighlight[], video_id: string, title: string }
  *   risposta 4xx/5xx: { error: string }
+ *
+ * Il backend salva anche l'analisi in un DB persistente (id + titolo +
+ * JSON), da cui GET /videos alimenta lo storico (vedi src/api/videos.js).
  *
  * Il risultato grezzo viene normalizzato in un AnalysisResult (vedi
  * src/utils/normalizeResult.js) prima di essere restituito al chiamante.
@@ -45,7 +48,7 @@ export async function analyzeVideo(file, { onProgress } = {}) {
   });
 
   if (data.error) throw new Error(data.error);
-  return normalizeResult(data.result, { videoUrl });
+  return normalizeResult(data.result, { videoUrl, id: data.video_id, title: data.title });
 }
 
 function wait(ms) {

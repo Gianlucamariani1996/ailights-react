@@ -1,16 +1,17 @@
 import { apiClient, DEMO_MODE } from "./client.js";
 import { createMockHistory } from "../demo/mockData.js";
+import { normalizeResult } from "../utils/normalizeResult.js";
 
 /**
- * Recupera lo storico dei video già caricati/analizzati.
+ * Recupera lo storico dei video già caricati/analizzati dal DB del backend
+ * (vedi db.py / GET /videos in ailights-agent/app.py).
  *
- * ⚠️ CONTRATTO ASSUNTO (da confermare col backend, endpoint OPZIONALE):
  *   GET {VITE_API_BASE_URL}/videos
- *   risposta: AnalysisResult[]  (stesso shape di /analyze, uno per video)
+ *   risposta: [{ id, title, created_at, result: RawHighlight[] }, ...]
  *
- * Se questo endpoint non esiste ancora sul backend, la chiamata fallirà:
- * l'app in tal caso mostra semplicemente lo storico costruito in sessione
- * (i video analizzati durante l'uso corrente), senza rompersi. Vedi App.jsx.
+ * Ogni record viene normalizzato in un AnalysisResult (vedi
+ * src/utils/normalizeResult.js), riusando id/titolo già calcolati dal
+ * backend invece di ricalcolarli.
  *
  * @returns {Promise<import('../types.js').AnalysisResult[]>}
  */
@@ -20,5 +21,11 @@ export async function fetchVideoHistory() {
     return createMockHistory();
   }
   const { data } = await apiClient.get("/videos");
-  return data;
+  return data.map((record) =>
+    normalizeResult(record.result, {
+      id: record.id,
+      title: record.title,
+      createdAt: record.created_at,
+    })
+  );
 }

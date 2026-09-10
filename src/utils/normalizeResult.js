@@ -21,7 +21,10 @@ function canonicalType(type) {
  * (vedi src/types.js).
  *
  * @param {import('../types.js').RawHighlight[]} rawHighlights
- * @param {{ videoUrl?: string|null }} [meta]
+ * @param {{ videoUrl?: string|null, id?: string, title?: string, createdAt?: string }} [meta]
+ *   `id`/`title`/`createdAt` sovrascrivono i valori derivati qui: li passa
+ *   il backend (vedi POST /analyze-video e GET /videos in ailights-agent/app.py),
+ *   che calcola il titolo con la stessa euristica per restare coerente col DB.
  * @returns {import('../types.js').AnalysisResult}
  */
 export function normalizeResult(rawHighlights, meta = {}) {
@@ -36,7 +39,8 @@ export function normalizeResult(rawHighlights, meta = {}) {
   }));
 
   const teams = [...new Set(highlights.map((h) => h.team).filter(Boolean))];
-  const title = teams.length === 2 ? `${teams[0]} vs ${teams[1]}` : teams[0] || "Video analizzato";
+  const derivedTitle = teams.length === 2 ? `${teams[0]} vs ${teams[1]}` : teams[0] || "Video analizzato";
+  const title = meta.title ?? derivedTitle;
 
   // Il backend analizza solo calcio: il campo non è più nel JSON restituito.
   const sport = "calcio";
@@ -50,13 +54,13 @@ export function normalizeResult(rawHighlights, meta = {}) {
   const duration = highlights.reduce((max, h) => Math.max(max, h.endTime), 0);
 
   return {
-    id: `video-${Date.now()}`,
+    id: meta.id ?? `video-${Date.now()}`,
     title,
     competition: "",
     sport,
     videoUrl: meta.videoUrl ?? null,
     duration,
-    createdAt: new Date().toISOString(),
+    createdAt: meta.createdAt ?? new Date().toISOString(),
     stats: {
       highlightsFound: highlights.length,
       totalClipDuration,
